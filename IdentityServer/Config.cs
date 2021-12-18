@@ -15,7 +15,12 @@ namespace IdentityServer
             {
                 new IdentityResources.OpenId(),
                 new IdentityResources.Profile(),
-                new IdentityResources.Email()
+                new IdentityResources.Email(),
+                new IdentityResource("photos_app", "Web Photos", new []
+                {
+                    "role", "subscription", "testing"
+                })
+                
             };
 
         public static IEnumerable<ApiResource> Apis =>
@@ -61,6 +66,8 @@ namespace IdentityServer
                     // NOTE: куда отправлять после логина
                     RedirectUris = { "https://localhost:5001/signin-passport" },
 
+                    PostLogoutRedirectUris = { "https://localhost:5001/signout-callback-passport" },
+
                     AllowedScopes = new List<string>
                     {
                         // NOTE: Позволяет запрашивать id token
@@ -68,7 +75,8 @@ namespace IdentityServer
                         // NOTE: Позволяет запрашивать профиль пользователя через id token
                         IdentityServerConstants.StandardScopes.Profile,
                         // NOTE: Позволяет запрашивать email пользователя через id token
-                        IdentityServerConstants.StandardScopes.Email
+                        IdentityServerConstants.StandardScopes.Email,
+                        "photos_app"
                     },
 
                     // NOTE: Надо ли добавлять информацию о пользователе в id token при запросе одновременно

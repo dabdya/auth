@@ -51,6 +51,9 @@ namespace PhotosService
                     options.Authority = "https://localhost:7001";
                     options.Audience = "photos_service";
                 });
+            
+
+            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
