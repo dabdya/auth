@@ -28,7 +28,6 @@ namespace PhotosApp.Services.Authorization
                     new Claim("subscription", "paid")
                 });
             }
-            throw new NotImplementedException();
 
             return principal;
         }

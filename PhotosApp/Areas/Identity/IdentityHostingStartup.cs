@@ -56,13 +56,21 @@ namespace PhotosApp.Areas.Identity
                 services.ConfigureApplicationCookie(options =>
                 {
                     var serviceProvider = services.BuildServiceProvider();
-                    options.SessionStore = serviceProvider.GetRequiredService<EntityTicketStore>();
+                    //options.SessionStore = serviceProvider.GetRequiredService<EntityTicketStore>();
                     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
                     options.Cookie.Name = "PhotosApp.Auth";
                     options.Cookie.HttpOnly = true;
                     options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
                     options.LoginPath = "/Identity/Account/Login";
                     options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+                    options.SlidingExpiration = true;
+                });
+
+                services.ConfigureExternalCookie(options =>
+                {
+                    options.Cookie.Name = "PhotosApp.Auth.External";
+                    options.Cookie.HttpOnly = true;
+                    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
                     options.SlidingExpiration = true;
                 });
 
@@ -85,14 +93,24 @@ namespace PhotosApp.Areas.Identity
 
                 services.AddScoped<IPasswordHasher<PhotosAppUser>, SimplePasswordHasher<PhotosAppUser>>();
                 services.AddScoped<IAuthorizationHandler, MustOwnPhotoHandler>();
-
+ 
                 services.AddAuthentication()
-                    .AddGoogle("Google", options =>
+                    .AddOpenIdConnect(
+                        authenticationScheme: "Google",
+                        displayName: "Google",
+                        options =>
                         {
+                            options.Authority = "https://accounts.google.com/";
                             options.ClientId = context.Configuration["Authentication:Google:ClientId"];
                             options.ClientSecret = context.Configuration["Authentication:Google:ClientSecret"];
+
+                            options.CallbackPath = "/signin-google";
+                            options.SignedOutCallbackPath = "/signout-callback-google";
+                            options.RemoteSignOutPath = "/signout-google";
+
+                            options.Scope.Add("email");
                         });
-                        
+
                 services.AddAuthentication()
                     .AddJwtBearer(options =>
                     {
@@ -118,6 +136,21 @@ namespace PhotosApp.Areas.Identity
     
                 services.AddAuthorization(options =>
                 {
+                    options.DefaultPolicy = new AuthorizationPolicyBuilder(
+                        JwtBearerDefaults.AuthenticationScheme,
+                        IdentityConstants.ApplicationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+                    options.AddPolicy(
+                        "Dev",
+                        policyBuilder =>
+                        {
+                            policyBuilder.RequireAuthenticatedUser();
+                            policyBuilder.RequireRole("Dev");
+                            policyBuilder.AddAuthenticationSchemes(
+                                JwtBearerDefaults.AuthenticationScheme,
+                                IdentityConstants.ApplicationScheme);
+                        });    
                     options.AddPolicy(
                         "Beta",
                         policyBuilder =>
@@ -144,10 +177,10 @@ namespace PhotosApp.Areas.Identity
                         policyBuilder =>
                         {
                             policyBuilder.RequireAuthenticatedUser();
-                            policyBuilder.RequireRole("Dev");
-                            policyBuilder.AddAuthenticationSchemes(
-                                JwtBearerDefaults.AuthenticationScheme,
-                                IdentityConstants.ApplicationScheme);
+                            //policyBuilder.RequireRole("Dev");
+                            //policyBuilder.AddAuthenticationSchemes(
+                            //    JwtBearerDefaults.AuthenticationScheme,
+                            //    IdentityConstants.ApplicationScheme);
                         });
                 });
             });
