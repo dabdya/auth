@@ -139,6 +139,16 @@ namespace PhotosApp.Areas.Identity
                             policyBuilder.RequireAuthenticatedUser();
                             policyBuilder.AddRequirements(new MustOwnPhotoRequirement());
                         });
+                    options.AddPolicy(
+                        "Dev",
+                        policyBuilder =>
+                        {
+                            policyBuilder.RequireAuthenticatedUser();
+                            policyBuilder.RequireRole("Dev");
+                            policyBuilder.AddAuthenticationSchemes(
+                                JwtBearerDefaults.AuthenticationScheme,
+                                IdentityConstants.ApplicationScheme);
+                        });
                 });
             });
         }
