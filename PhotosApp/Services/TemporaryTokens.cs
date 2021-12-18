@@ -26,7 +26,7 @@ namespace PhotosApp.Services
                 claims: claims,
                 notBefore: DateTime.UtcNow,
                 expires: DateTime.UtcNow.AddSeconds(30),
-                signingCredentials: new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256)););
+                signingCredentials: new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
             return encodedJwt;
