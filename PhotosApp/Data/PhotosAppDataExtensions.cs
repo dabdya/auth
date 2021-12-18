@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PhotosApp.Services.TicketStores;
 using PhotosApp.Areas.Identity.Data;
+using System.Security.Claims;
 
 namespace PhotosApp.Data
 {
@@ -31,6 +32,9 @@ namespace PhotosApp.Data
                         scope.ServiceProvider.GetRequiredService<UsersDbContext>().Database.Migrate();
                         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<PhotosAppUser>>();
                         userManager.SeedWithSampleUsersAsync().Wait();
+
+                        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                        roleManager.SeedWithSampleRolesAsync().Wait();
 
                         scope.ServiceProvider.GetRequiredService<TicketsDbContext>().Database.Migrate();
                         var ticketsDbContext = scope.ServiceProvider.GetRequiredService<TicketsDbContext>();
@@ -150,41 +154,43 @@ namespace PhotosApp.Data
             await dbContext.SaveChangesAsync();
         }
 
-        private static async Task SeedWithSampleUsersAsync<TUser>(this UserManager<TUser> userManager)
-            where TUser : IdentityUser, new()
+        private static async Task SeedWithSampleUsersAsync(this UserManager<PhotosAppUser> userManager)
         {
             // NOTE: ToList важен, так как при удалении пользователя меняется список пользователей
             foreach (var user in userManager.Users.ToList())
                 await userManager.DeleteAsync(user);
 
             {
-                var user = new TUser
+                var user = new PhotosAppUser
                 {
                     Id = "a83b72ed-3f99-44b5-aa32-f9d03e7eb1fd",
                     UserName = "vicky@gmail.com",
                     Email = "vicky@gmail.com"
                 };
                 await userManager.RegisterUserIfNotExists(user, "Pass!2");
+                await userManager.AddClaimAsync(user, new Claim("testing", "beta"));
             }
 
             {
-                var user = new TUser
+                var user = new PhotosAppUser
                 {
                     Id = "dcaec9ce-91c9-4105-8d4d-eee3365acd82",
                     UserName = "cristina@gmail.com",
-                    Email = "cristina@gmail.com"
+                    Email = "cristina@gmail.com",
+                    Paid = true
                 };
                 await userManager.RegisterUserIfNotExists(user, "Pass!2");
             }
 
             {
-                var user = new TUser
+                var user = new PhotosAppUser
                 {
                     Id = "b9991f69-b4c1-477d-9432-2f7cf6099e02",
                     UserName = "dev@gmail.com",
                     Email = "dev@gmail.com"
                 };
                 await userManager.RegisterUserIfNotExists(user, "Pass!2");
+                await userManager.AddToRoleAsync(user, "Dev");
             }
         }
 
