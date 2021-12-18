@@ -88,7 +88,28 @@ namespace PhotosApp.Areas.Identity
                             options.ClientId = context.Configuration["Authentication:Google:ClientId"];
                             options.ClientSecret = context.Configuration["Authentication:Google:ClientSecret"];
                         });
-
+                services.AddAuthentication()
+                    .AddJwtBearer(options =>
+                    {
+                        options.RequireHttpsMetadata = false;
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = false,
+                            ValidateAudience = false,
+                            ValidateLifetime = true,
+                            ClockSkew = TimeSpan.Zero,
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = TemporaryTokens.SigningKey
+                        };
+                        options.Events = new JwtBearerEvents
+                        {
+                            OnMessageReceived = c =>
+                            {
+                                c.Token = c.Request.Cookies[TemporaryTokens.CookieName]];
+                                return Task.CompletedTask;
+                            }
+                        };
+                    });
 
                 services.AddAuthorization(options =>
                 {
