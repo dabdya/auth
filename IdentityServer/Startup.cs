@@ -12,6 +12,7 @@ using IdentityServer.Data;
 using IdentityServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AspNetCore.Identity.Mongo;
 
 namespace IdentityServer
 {
@@ -28,12 +29,6 @@ namespace IdentityServer
         {
             // uncomment, if you want to add an MVC-based UI
             services.AddControllersWithViews();
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite("DataSource=app.db;Cache=Shared"));
-
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
 
             var builder = services.AddIdentityServer()
                 .AddInMemoryIdentityResources(Config.Ids)
@@ -42,6 +37,19 @@ namespace IdentityServer
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<ApplicationUser>();
 
+            services.AddIdentityMongoDbProvider<ApplicationUser, ApplicationRole, string>(
+                identity =>
+                {
+                    // NOTE: просто пример настройки
+                    identity.Password.RequiredLength = 4;
+                },
+                mongo =>
+                {
+                    // NOTE: нужная строка подключения для твоего кластера
+                    // Здесь используется адрес локального кластера по умолчанию
+                    mongo.ConnectionString = "mongodb://127.0.0.1:27017/identity";
+                })
+                .AddDefaultTokenProviders();
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
         }
