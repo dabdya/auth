@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,10 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using PhotosService.Data;
 using PhotosService.Models;
+using PhotosService.Services;
 using Serilog;
+using System;
+using System.Threading.Tasks;
 
 namespace PhotosService
 {
@@ -28,6 +32,7 @@ namespace PhotosService
             services.AddControllers(options =>
             {
                 options.ReturnHttpNotAcceptable = true;
+                options.ModelBinderProviders.Insert(0, new JwtSecurityTokenModelBinderProvider());
             })
             .AddNewtonsoftJson(options =>
             {
@@ -50,10 +55,16 @@ namespace PhotosService
                 {
                     options.Authority = "https://localhost:7001";
                     options.Audience = "photos_service";
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            JwtSecurityTokenModelBinder.SaveToken(context.HttpContext, context.SecurityToken);
+                            return Task.CompletedTask;
+                        }
+                    };
+                    options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
                 });
-            
-
-            
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
